@@ -21,6 +21,9 @@
   "engines": {
     "node":               "*"
   },
+  "scripts": {
+	"test":           "node test.js"  
+  },
   "keywords":             ["youtube", "video", "feeds", "api"],
   "license": {
     "type":               "Public Domain",
