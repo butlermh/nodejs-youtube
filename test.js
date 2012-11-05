@@ -55,3 +55,29 @@ function doTest( err, label, tests ) {
 		}
 	}
 }
+
+// METHODS
+doTest( null, 'methods', [
+	['feeds', typeof youtube.feeds, 'object'],
+	['video', typeof youtube.video, 'function'],
+	['user', typeof youtube.user, 'function'],
+	['talk', typeof youtube.talk, 'function'],
+
+	['feeds.videos', typeof youtube.feeds.videos, 'function'],
+	['feeds.related', typeof youtube.feeds.related, 'function'],
+	['feeds.responses', typeof youtube.feeds.responses, 'function'],
+	['feeds.comments', typeof youtube.feeds.comments, 'function'],
+	['feeds.standard', typeof youtube.feeds.standard, 'function'],
+	['feeds.playlist', typeof youtube.feeds.playlist, 'function'],
+	
+	['video()', typeof youtube.video(), 'object'],
+	['video().details', typeof youtube.video().details, 'function'],
+	['video().related', typeof youtube.video().related, 'function'],
+	['video().responses', typeof youtube.video().responses, 'function'],
+	['video().comments', typeof youtube.video().comments, 'function'],
+	
+	['user()', typeof youtube.user(), 'object'],
+	['user().favorites', typeof youtube.user().favorites, 'function'],
+	['user().playlists', typeof youtube.user().playlists, 'function'],
+	['user().profile', typeof youtube.user().profile, 'function']
+])
