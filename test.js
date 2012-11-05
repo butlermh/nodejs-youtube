@@ -81,3 +81,29 @@ doTest( null, 'methods', [
 	['user().playlists', typeof youtube.user().playlists, 'function'],
 	['user().profile', typeof youtube.user().profile, 'function']
 ])
+
+
+// VIDEO
+var videoId = 'teTk158Pje8'
+var video = youtube.video( videoId )
+
+video.details( function( err, data ) {
+	doTest( err, 'video.details', [
+		['id', data.id, videoId],
+		['uploaded', data.uploaded, '2010-03-23T01:53:28.000Z'],
+		['uploader', data.uploader, 'unknowntitle'],
+		['category', data.category, 'Film'],
+		['title', data.title, 'Yellow Friends'],
+		['duration', data.duration, 39],
+		['accessControl.embed', data.accessControl.embed, 'allowed']
+	])
+})
+
+
+video.related( function( err, data ) {
+	doTest( err, 'video.related', [
+		['startIndex', data.startIndex, 1],
+		['items', data.items instanceof Array && data.items.length >= 1, true],
+		['items[0]', typeof data.items[0].id, 'string']
+	])
+})
