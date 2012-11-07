@@ -31,11 +31,11 @@ OTHER DEALINGS IN THE SOFTWARE.
 For more information, please refer to <http://unlicense.org>
 */
 
-var	https = require('https'),
-	EventEmitter = require('events').EventEmitter,
-	querystring = require('querystring')
+var https = require('https'),
+    xml2json = require('node-xml2json'),
+    querystring = require('querystring')
 
-var app = new EventEmitter()
+var app = {}
 
 
 ///////////
@@ -77,11 +77,7 @@ app.feeds = {
 			var cb = vars
 			var vars = {}
 		}
-		app.talk( 'feeds/api/videos/'+ videoid +'/comments', vars, function( res ) {
-			if( res.feed && res.feed.entry ) {
-				cb( res.feed.entry )
-			}
-		}, true )
+		app.talk( 'feeds/api/videos/'+ videoid +'/comments', vars, cb, 'feed.entry' )
 	},
 	
 	// Standard feed
@@ -138,7 +134,7 @@ app.video = function( videoid, cb ) {
 				var cb = vars
 				var vars = {}
 			}
-			app.feeds.responses( videoid, vars. cb )
+			app.feeds.responses( videoid, vars, cb )
 		},
 		
 		comments: function( vars, cb ) {
@@ -187,11 +183,7 @@ app.user = function( userid, cb ) {
 		
 		// Profile
 		profile: function( cb ) {
-			app.talk( 'feeds/api/users/'+ userid, {}, function( res ) {
-				if( res.entry ) {
-					cb( res.entry )
-				}
-			}, true )
+			app.talk( 'feeds/api/users/'+ userid, {}, cb, 'entry' )
 		}
 		
 	}
@@ -203,7 +195,10 @@ app.user = function( userid, cb ) {
 // COMMUNICATE //
 /////////////////
 
-app.talk = function( path, fields, cb, oldJSON ) {
+// close connection when not done within N milliseconds
+app.timeout = 30000
+
+app.talk = function( path, fields, cb, oldJsonKey ) {
 	
 	// fix callback
 	if( !cb && typeof fields == 'function' ) {
@@ -217,7 +212,7 @@ app.talk = function( path, fields, cb, oldJSON ) {
 	}
 	
 	// force JSON-C and version
-	fields.alt = oldJSON === true ? 'json' : 'jsonc'
+	fields.alt = oldJsonKey !== undefined ? 'json' : 'jsonc'
 	fields.v = 2
 	
 	// prepare
@@ -241,24 +236,117 @@ app.talk = function( path, fields, cb, oldJSON ) {
 		response.on( 'end', function() {
 			
 			data = data.toString('utf8').trim()
+			var error = null
 			
 			// validate
 			if( data.match( /^(\{.*\}|\[.*\])$/ ) ) {
 				
 				// ok
 				data = JSON.parse( data )
-				if( oldJSON ) {
-					cb( data )
-				} else if( data.data ) {
-					cb( data.data )
+				
+				if( data.data !== undefined ) {
+					data = data.data
+				} else if( data.error !== undefined ) {
+					error = {origin: 'api', reason: 'error', details: data.error}
+				} else if( oldJsonKey !== undefined ) {
+					if(
+						oldJsonKey == 'entry'
+						&& data.entry === undefined
+					) {
+						error = {origin: 'api', reason: 'invalid response'}
+					} else if(
+						oldJsonKey == 'feed.entry'
+						&& data.feed === undefined
+						&& data.feed.entry === undefined
+					) {
+						error = {origin: 'api', reason: 'invalid response'}
+					}
 				}
+				
+			} else if( data.match( /^<errors .+<\/errors>$/ ) ) {
+				
+				// xml error response
+				data = xml2json.parser( data )
+				
+				// fix for JSONC compatibility
+				var error = { errors: data.errors.error !== undefined ? [data.errors.error] : data.errors }
+				error.errors.forEach( function( err, errk ) {
+					if( err.internalreason !== undefined ) {
+						error.errors[ errk ].internalReason = err.internalreason
+						delete error.errors[ errk ].internalreason
+					}
+				})
+				
+				error = {origin: 'api', reason: 'error', details: error}
+				
+			} else {
+				
+				// not json
+				error = {origin: 'api', reason: 'not json'}
 				
 			}
 			
+			// parse error
+			if( error && error.origin == 'api' && error.reason == 'error' ) {
+				if(
+					error.details.code !== undefined
+					&& error.details.errors[0] !== undefined
+					&& error.details.errors[0].code == 'ResourceNotFoundException'
+				) {
+					error = {origin: 'method', reason: 'not found', details: error.details}
+				} else if( error.details.code == 403 ) {
+					error = {origin: 'method', reason: 'not allowed', details: error.details}
+				} else if( error.details.message == 'Invalid id' ) {
+					error = {origin: 'method', reason: 'invalid id'}
+				}
+			}
+			
+			// parse response
+			if( data.totalItems !== undefined && data.totalItems == 0 ) {
+				error = {origin: 'method', reason: 'not found'}
+			} else if(
+				data.feed !== undefined
+				&& data.feed['openSearch$totalResults'] !== undefined
+				&& data.feed['openSearch$totalResults']['$t'] !== undefined
+				&& data.feed['openSearch$totalResults']['$t'] == 0
+			) {
+				error = {origin: 'method', reason: 'not found'}
+			}
+			
+			// do callback
+			var err = null
+			if( error ) {
+				err = new Error( error.reason )
+				err.origin = error.origin
+				err.details = error.details || null
+			}
+			cb( err, data )
+			
+		})
+		
+		// early disconnect
+		response.on( 'close', function() {
+			var err = new Error( 'connection closed' )
+			err.origin = 'api'
+			cb( err )
 		})
 		
 	})
 	
+	// no endless waiting
+	request.setTimeout( app.timeout, function() {
+		request.destroy()
+	})
+	
+	// connection error
+	request.on( 'error', function( error ) {
+		var err = new Error( 'connection error' )
+		err.origin = 'request'
+		err.details = error
+		cb( err )
+	})
+	
+	// perform and finish request
 	request.end()
 	
 }
