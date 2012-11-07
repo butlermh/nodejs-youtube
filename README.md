@@ -72,13 +72,14 @@ err.details   : api response or other information when available, or `null`
 Messages:
 
 ```
-invalid response   api       API response can't be parsed
-not json           api       Expected JSON, received something else
-not found          method    Requested data was not found
-not allowed        method    No permission to requested data
-connection closed  api       Connection dropped early
-connection error   request   Can't connect to API
-error              api       API returned an error, see err.details
+Error: invalid response   api       API response can't be parsed
+Error: not json           api       Expected JSON, received something else
+Error: not found          method    Requested data was not found
+Error: not allowed        method    No permission to requested data
+Error: invalid id         method    Requested video ID is invalid
+Error: connection closed  api       Connection dropped early
+Error: connection error   request   Can't connect to API
+Error: error              api       API returned an error, see err.details
 ```
 
 
@@ -302,21 +303,22 @@ Communication
 
 
 ## talk
-### ( path, [fields], callback, [oldJSON] )
+### ( path, [fields], callback, [oldJsonKey] )
 
 Directly talk to the API. This function takes care of connecting and calling the callback only when valid JSON is returned.
 
 ```
-Param      Type       Description
---------   --------   ----------------------------------------------------
-path       string     full method path without leading slash
-fields     object     GET parameters
-callback   function   callback function to receive results
-oldJSON    boolean    force old XML-to-JSON format instead of clean JSON-C
+Param        Type       Description
+----------   --------   ----------------------------------------------------
+path         string     full method path without leading slash
+fields       object     GET parameters
+callback     function   callback function to receive results
+oldJsonKey   boolean    force old XML-to-JSON format instead of clean JSON-C
+                        its value is the key containing the expected results
 ```
 
-License
-=======
+Unlicense / Public Domain
+=========================
 
 
 This is free and unencumbered software released into the public domain.
