@@ -34,6 +34,16 @@ For more information, please refer to <http://unlicense.org>
 var youtube = require('./'),
     errors = 0
 
+process.on( 'exit', function() {
+	if( errors == 0 ) {
+		console.log('\nDONE, no errors.\n')
+		process.exit(0)
+	} else {
+		console.log('\nFAIL, '+ errors +' errors occurred!\n')
+		process.exit(1)
+	}
+})
+
 function doTest( err, label, tests ) {
 	if( err instanceof Error ) {
 		console.log( label +': ERROR' )
