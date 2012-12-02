@@ -93,6 +93,21 @@ doTest( null, 'methods', [
 ])
 
 
+// User
+var user = youtube.user( 'unknowntitle' )
+
+user.profile( function( err, data ) {
+	doTest( err, 'user.profile', [
+		['id', data.id['$t'], 'tag:youtube.com,2008:user:iNQhUYwHcNIsY3yjJ87bsA'],
+		['published', data.published['$t'], '2006-11-18T06:02:05.000Z'],
+		['title', data.title['$t'], 'unknowntitle'],
+		['yt$location', data['yt$location']['$t'], 'NL'],
+		['yt$userId', data['yt$userId']['$t'], 'iNQhUYwHcNIsY3yjJ87bsA'],
+		['yt$username', data['yt$username']['$t'], 'unknowntitle']
+	])
+})
+
+
 // VIDEO
 var videoId = 'teTk158Pje8'
 var video = youtube.video( videoId )
