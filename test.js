@@ -115,6 +115,15 @@ user.favorites( function( err, data ) {
 })
 
 
+user.playlists( function( err, data ) {
+	doTest( err, 'user.playlists', [
+		['startIndex', data.startIndex, 1],
+		['totalItems', data.totalItems >= 2, true],
+		['items', data.items[0] && data.items.length == data.totalItems, true]
+	])
+})
+
+
 // VIDEO
 var videoId = 'teTk158Pje8'
 var video = youtube.video( videoId )
