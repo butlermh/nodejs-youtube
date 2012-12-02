@@ -221,7 +221,7 @@ app.user = function( userid, cb ) {
 // close connection when not done within N milliseconds
 app.timeout = 30000
 
-app.talk = function( path, fields, cb, oldJsonKey ) {
+app.talk = function( path, fields, cb ) {
 	
 	// fix callback
 	if( !cb && typeof fields == 'function' ) {
@@ -235,8 +235,12 @@ app.talk = function( path, fields, cb, oldJsonKey ) {
 	}
 	
 	// force JSON-C and version
-	fields.alt = oldJsonKey !== undefined ? 'json' : 'jsonc'
 	fields.v = 2
+	fields.alt = 'jsonc'
+	
+	if( path.match(/^feeds\/api\/users\/[^\/]+$/) ) {
+		fields.alt = 'json'
+	}
 	
 	// prepare
 	var options = {
@@ -271,12 +275,6 @@ app.talk = function( path, fields, cb, oldJsonKey ) {
 					data = data.data
 				} else if( data.error !== undefined ) {
 					error = {origin: 'api', reason: 'error', details: data.error}
-				} else if( oldJsonKey !== undefined ) {
-					if( data[ oldJsonKey ] === undefined ) {
-						error = {origin: 'api', reason: 'invalid response'}
-					} else {
-						data = data[ oldJsonKey ]
-					}
 				}
 				
 			} else if( data.match( /^<errors .+<\/errors>$/ ) ) {
