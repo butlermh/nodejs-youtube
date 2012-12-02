@@ -39,7 +39,7 @@ process.on( 'exit', function() {
 		console.log('\nDONE, no errors.\n')
 		process.exit(0)
 	} else {
-		console.log('\nFAIL, '+ errors +' errors occurred!\n')
+		console.log('\nFAIL, '+ errors +' error'+ (errors > 1 ? 's' : '') +' occurred!\n')
 		process.exit(1)
 	}
 })
@@ -117,7 +117,7 @@ youtube.feeds.standard( 'NL/most_viewed_News', {date: 'yesterday'}, function( er
 })
 
 
-// User
+// USER
 var user = youtube.user( 'unknowntitle' )
 
 user.profile( function( err, data ) {
