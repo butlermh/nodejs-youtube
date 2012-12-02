@@ -108,6 +108,13 @@ user.profile( function( err, data ) {
 })
 
 
+user.favorites( function( err, data ) {
+	doTest( null, 'user.favorites', [
+		['Error test', err instanceof Error && err.details.code == 403, true]
+	])
+})
+
+
 // VIDEO
 var videoId = 'teTk158Pje8'
 var video = youtube.video( videoId )
