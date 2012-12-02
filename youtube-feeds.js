@@ -183,7 +183,30 @@ app.user = function( userid, cb ) {
 		
 		// Profile
 		profile: function( cb ) {
-			app.talk( 'feeds/api/users/'+ userid, {}, cb, 'entry' )
+			app.talk( 'feeds/api/users/'+ userid, function( err, data ) {
+				if( !err ) {
+					if( data.entry !== undefined || data.entry.id !== undefined ) {
+						var user = {
+							published: data.entry.published['$t'],
+							updated: data.entry.updated['$t'],
+							title: data.entry.title['$t'],
+							summary: data.entry.summary['$t'],
+							channelId: data.entry['yt$channelId']['$t'],
+							location: data.entry['yt$location']['$t'],
+							maxUploadDuration: data.entry['yt$maxUploadDuration'],
+							statistics: data.entry['yt$statistics'],
+							thumbnail: data.entry['media$thumbnail'].url,
+							userId: data.entry['yt$userId']['$t'],
+							username: data.entry['yt$username']['$t']
+						}
+						cb( null, user )
+					} else {
+						cb( new Error('invalid response') )
+					}
+				} else {
+					cb( err, data )
+				}
+			})
 		}
 		
 	}
