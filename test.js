@@ -172,3 +172,54 @@ video.related( function( err, data ) {
 		['items[0]', typeof data.items[0].id, 'string']
 	])
 })
+
+
+// REALITY CHECK
+
+// Find something interesting
+youtube.feeds.videos(
+	{
+		q: 'ryan doyle',
+		hd: true,
+		duration: 'short',
+		hl: 'en',
+		'movie-genre': 17,
+		orderby: 'rating'
+	},
+	function( err, data ) {
+		if( err instanceof Error ) {
+			console.log( 'Reality check: FAILED', err )
+			errors++
+		} else {
+			if( data.items[0] ) {
+				var vid = data.items[0]
+				if( typeof vid.id === undefined || vid.rateCount == 0 || vid.viewCount < vid.rateCount ) {
+					console.log( 'Reality check: FAILED (data.items[0])' )
+					errors++
+				} else {
+					var video = youtube.video( vid.id )
+					video.comments( function( err, comments ) {
+						if( err instanceof Error ) {
+							console.log( 'Reality check: FAILED (video.comments)' )
+							errors++
+						} else if( comments['openSearch$totalResults'] === undefined || comments['openSearch$totalResults']['$t'] < 1 ) {
+							console.log( 'Reality check: FAILED (video.comments.openSearch$totalResults)' )
+							errors++
+						} else if( comments.entry === undefined || comments.entry[0] === undefined || comments.entry.length <= 0 ) {
+							console.log( 'Reality check: FAILED (video.comments.entry)' )
+							errors++
+						} else if( comments.entry[0]['yt$videoid']['$t'].match(/^[a-z0-9-_]{11}$/i) === null ) {
+							console.log( 'Reality check: FAILED (video.comments.entry.id)' )
+							errors++
+						} else {
+							console.log( 'Reality check: ok' )
+						}
+					})
+				}
+			} else {
+				console.log( 'Reality check: FAILED (data.items)' )
+				errors++
+			}
+		}
+	}
+)
