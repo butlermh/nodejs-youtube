@@ -100,7 +100,9 @@ youtube.feeds.videos( {q: 'freerun', 'max-results': 3}, function( err, data ) {
 		['startIndex', data.startIndex, 1],
 		['itemsPerPage', data.itemsPerPage, 3],
 		['items', data.items[0] && data.items.length == 3, true],
-		['items[0].id', data.items[0].id.match(/^[a-z0-9-_]{11}$/i)[0] !== null, true]
+		['items[1].id', data.items[1].id.match(/^[a-z0-9-_]{11}$/i)[0] !== null, true]
+	])
+})
 	])
 })
 
