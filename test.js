@@ -54,6 +54,7 @@ function doTest( err, label, tests ) {
 		tests.forEach( function( test ) {
 			if( test[1] !== test[2] ) {
 				testErrors.push(test[0])
+				errors++
 			}
 		})
 		
@@ -61,7 +62,6 @@ function doTest( err, label, tests ) {
 			console.log( label +': ok' )
 		} else {
 			console.log( label +': failed ('+ testErrors.join(', ') +')' )
-			errors++
 		}
 	}
 }
