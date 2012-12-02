@@ -103,6 +103,16 @@ youtube.feeds.videos( {q: 'freerun', 'max-results': 3}, function( err, data ) {
 		['items[1].id', data.items[1].id.match(/^[a-z0-9-_]{11}$/i)[0] !== null, true]
 	])
 })
+
+
+youtube.feeds.standard( 'NL/most_viewed_News', {date: 'yesterday'}, function( err, data ) {
+	doTest( err, 'feeds.standard', [
+		['totalItems', data.totalItems, 99],
+		['startIndex', data.startIndex, 1],
+		['itemsPerPage', data.itemsPerPage, 25],
+		['items', data.items[0] && data.items.length == 25, true],
+		['items[1].id', data.items[1].id.match(/^[a-z0-9-_]{11}$/i)[0] !== null, true],
+		['items[1].viewCount', data.items[1].viewCount >= 1, true]
 	])
 })
 
