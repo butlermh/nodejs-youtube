@@ -31,7 +31,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 For more information, please refer to <http://unlicense.org>
 */
 
-var https = require('https'),
+var http = require('http'),
     xml2json = require('node-xml2json'),
     querystring = require('querystring')
 
@@ -183,30 +183,12 @@ app.user = function( userid, cb ) {
 		
 		// Profile
 		profile: function( cb ) {
-			app.talk( 'feeds/api/users/'+ userid, function( err, data ) {
-				if( !err ) {
-					if( data.entry !== undefined || data.entry.id !== undefined ) {
-						var user = {
-							published:		data.entry.published['$t'],
-							updated:		data.entry.updated['$t'],
-							title:			data.entry.title['$t'],
-							summary:		data.entry.summary['$t'],
-							channelId:		data.entry['yt$channelId']['$t'],
-							location:		data.entry['yt$location']['$t'],
-							maxUploadDuration:	data.entry['yt$maxUploadDuration'],
-							statistics:		data.entry['yt$statistics'],
-							thumbnail:		data.entry['media$thumbnail'].url,
-							userId:			data.entry['yt$userId']['$t'],
-							username:		data.entry['yt$username']['$t']
-						}
-						cb( null, user )
-					} else {
-						cb( new Error('invalid response') )
-					}
-				} else {
-					cb( err, data )
-				}
-			})
+			app.talk( 'feeds/api/users/'+ userid, {}, cb, 'entry' )
+		},
+		
+		// Uploads
+		uploads: function( vars, cb ) {
+			app.talk( 'feeds/api/users/'+ userid +'/uploads', vars, cb)
 		}
 		
 	}
@@ -245,7 +227,7 @@ app.talk = function( path, fields, cb ) {
 	// prepare
 	var options = {
 		hostname:	'gdata.youtube.com',
-		port:		443,
+		port:		80,
 		path:		'/'+ path +'?'+ querystring.stringify( fields ),
 		headers: {
 			'User-Agent':	'youtube-feeds.js (https://github.com/fvdm/nodejs-youtube)',
@@ -255,7 +237,7 @@ app.talk = function( path, fields, cb ) {
 	}
 	
 	// request
-	var request = https.request( options, function( response ) {
+	var request = http.request( options, function( response ) {
 		
 		// response
 		var data = ''
@@ -274,7 +256,16 @@ app.talk = function( path, fields, cb ) {
 				if( data.data !== undefined ) {
 					data = data.data
 				} else if( data.error !== undefined ) {
-					error = {origin: 'api', reason: 'error', details: data.error}
+					error = new Error('error')
+					error.origin = 'api'
+					error.details = data.error
+				} else if( oldJsonKey !== undefined ) {
+					if( data[ oldJsonKey ] === undefined ) {
+						error = new Error('invalid response')
+						error.origin = 'api'
+					} else {
+						data = data[ oldJsonKey ]
+					}
 				}
 				
 			} else if( data.match( /^<errors .+<\/errors>$/ ) ) {
@@ -283,58 +274,63 @@ app.talk = function( path, fields, cb ) {
 				data = xml2json.parser( data )
 				
 				// fix for JSONC compatibility
-				var error = { errors: data.errors.error !== undefined ? [data.errors.error] : data.errors }
-				error.errors.forEach( function( err, errk ) {
+				error = new Error('error')
+				error.origin = 'api'
+				error.details = data.errors.error !== undefined ? [data.errors.error] : data.errors
+				
+				error.details.forEach( function( err, errk ) {
 					if( err.internalreason !== undefined ) {
-						error.errors[ errk ].internalReason = err.internalreason
-						delete error.errors[ errk ].internalreason
+						error.details[ errk ].internalReason = err.internalreason
+						delete error.details[ errk ].internalreason
 					}
 				})
-				
-				error = {origin: 'api', reason: 'error', details: error}
 				
 			} else {
 				
 				// not json
-				error = {origin: 'api', reason: 'not json'}
+				error = new Error('not json')
+				error.origin = 'api'
 				
 			}
 			
 			// parse error
-			if( error && error.origin == 'api' && error.reason == 'error' ) {
+			if( error && error.origin == 'api' && error.message == 'error' ) {
+				var errorDetails = error.details
 				if(
-					error.details.code !== undefined
-					&& error.details.errors[0] !== undefined
-					&& error.details.errors[0].code == 'ResourceNotFoundException'
+					error.details[0] !== undefined
+					&& error.details[0].code !== undefined
+					&& error.details[0].code == 'ResourceNotFoundException'
 				) {
-					error = {origin: 'method', reason: 'not found', details: error.details}
+					error = new Error('not found')
+					error.origin = 'method'
+					error.details = errorDetails
 				} else if( error.details.code == 403 ) {
-					error = {origin: 'method', reason: 'not allowed', details: error.details}
+					error = new Error('not allowed')
+					error.origin = 'method'
+					error.details = errorDetails
 				} else if( error.details.message == 'Invalid id' ) {
-					error = {origin: 'method', reason: 'invalid id'}
+					error = new Error('invalid id')
+					error.origin = 'method'
+					error.details = errorDetails
 				}
 			}
 			
 			// parse response
 			if( data.totalItems !== undefined && data.totalItems == 0 ) {
-				error = {origin: 'method', reason: 'not found'}
+				error = new Error('not found')
+				error.origin = 'method'
 			} else if(
 				data.feed !== undefined
 				&& data.feed['openSearch$totalResults'] !== undefined
 				&& data.feed['openSearch$totalResults']['$t'] !== undefined
 				&& data.feed['openSearch$totalResults']['$t'] == 0
 			) {
-				error = {origin: 'method', reason: 'not found'}
+				error = new Error('not found')
+				error.origin = 'method'
 			}
 			
 			// do callback
-			var err = null
-			if( error ) {
-				err = new Error( error.reason )
-				err.origin = error.origin
-				err.details = error.details || null
-			}
-			cb( err, data )
+			cb( error, data )
 			
 		})
 		
