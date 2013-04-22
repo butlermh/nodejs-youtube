@@ -146,7 +146,13 @@ app.user = function( userid, cb ) {
 		
 		// Uploads
 		uploads: function( vars, cb ) {
-			app.talk( 'feeds/api/users/'+ userid +'/uploads', vars, cb)
+			app.talk( 'feeds/api/users/'+ userid +'/uploads', vars, cb )
+		},
+		
+		// Activity feed
+		activity: function( vars, cb ) {
+			vars.author = userid;
+			app.talk( 'feeds/api/events', vars, cb )
 		}
 		
 	}
