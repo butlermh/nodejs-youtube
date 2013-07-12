@@ -404,4 +404,13 @@ OTHER DEALINGS IN THE SOFTWARE.
 For more information, please refer to <http://unlicense.org>
 
 
+
+Changelog
+---------
+
+The changelog can be found in [CHANGELOG.md](https://github.com/fvdm/nodejs-youtube/blog/master/CHANGELOG.md).
+
+Refer to the [git log](https://github.com/fvdm/nodejs-youtube/commits/master) for details and diffs.
+
+
 [![githalytics.com alpha](https://cruel-carlota.pagodabox.com/51dca66ccf4c22e838a01ef2eb3c1705 "githalytics.com")](http://githalytics.com/fvdm/nodejs-youtube)
