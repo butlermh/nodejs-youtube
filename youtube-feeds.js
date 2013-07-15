@@ -153,7 +153,7 @@ app.user = function( userid, cb ) {
 		// Activity feed
 		activity: function( vars, cb ) {
 			vars.author = userid;
-			app.talk( 'feeds/api/events', vars, cb )
+			app.talk( 'feeds/api/events', vars, cb, 'entry' )
 		}
 		
 	}
