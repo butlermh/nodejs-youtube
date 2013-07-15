@@ -360,6 +360,20 @@ Get the user's uploaded videos.
 youtube.user( 'user' ).uploads( console.log )
 ```
 
+
+user.activity
+-------------
+### ( [vars], callback )
+
+Get the user's activity feed.
+
+```js
+youtube.user( 'user' ).activity( console.log )
+````
+
+**Requires a developer key**, see [Configuration](#configuration).
+
+
 ===========================================================================================
 
 
