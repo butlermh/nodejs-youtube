@@ -56,7 +56,7 @@ Which HTTP protocol to use: `http` (default) or `https`
 
 * `timeout` (integer)
 
-Destroy the request after this number of *milliseconds*. Default: 30000 (30 sec).
+After this number of *milliseconds* destroy the request and return `Error: request timeout`. Default: 5000 (5 sec).
 
 * `developerKey` (string)
 
