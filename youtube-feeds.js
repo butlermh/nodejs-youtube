@@ -159,7 +159,7 @@ app.user = function( userid, cb ) {
 // COMMUNICATE //
 /////////////////
 
-app.talk = function( path, fields, cb, oldJsonKey ) {
+app.talk = function( path, fields, cb, oldJsonKey, options ) {
 	
 	var complete = false
 	
@@ -179,7 +179,7 @@ app.talk = function( path, fields, cb, oldJsonKey ) {
 	fields.v = 2
 	
 	// prepare
-	var options = {
+	var options = options || {
 		hostname:	'gdata.youtube.com',
 		path:		'/'+ path +'?'+ querystring.stringify( fields ),
 		headers: {
@@ -342,8 +342,21 @@ app.talk = function( path, fields, cb, oldJsonKey ) {
 				error.origin = 'method'
 			}
 			
+      // get the URL for the next page if there is one
+      var next = null
+      try { 
+      data.link.forEach(
+        function(a) {
+          if (a.rel == 'next') {
+            next = a.href
+          }
+        })
+      } catch (err) {
+        //
+      }
+
 			// do callback
-			cb( error, data )
+			cb( error, data, next )
 			
 		})
 		

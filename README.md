@@ -77,10 +77,10 @@ youtube.feeds.videos( {q:'keywords'}, callback )
 Callbacks
 ---------
 
-Each method takes a `callback` function as last parameter. When everything seems alright `err` is null, otherwise `err` will be `instanceof Error` for tracing.
+Each method takes a `callback` function as last parameter. When everything seems alright `err` is null, otherwise `err` will be `instanceof Error` for tracing. `next` is the URL of the next page of results.
 
 ```js
-function( err, data ) {
+function( err, data, next ) {
 	if( err instanceof Error ) {
 		console.log( err )
 	} else {
@@ -299,7 +299,15 @@ videos.comments
 Get comments to a video, same as [feeds.comments](#feedscomments).
 
 ```js
-youtube.video( 'ern37eWDnT0' ).comments( {'max-results': 2}, console.log )
+function getComments(err, data, next) {
+  if (err == null) {
+    console.log(data)
+    if (next != null) {
+      youtube.talk("", {}, getComments, 'feed', next)
+    }
+  }
+}
+youtube.video( 'ern37eWDnT0' ).comments( {'max-results': 2, 'orderby': 'published'}, getComments)
 ```
 
 
